@@ -67,8 +67,10 @@ public class KibishiiWorker {
 					try {
 						new KibishiiWorker(args[0], endpoints, root);
 					} catch (InterruptedException e) {
+						System.out.println("Create KibishiiWorker InterruptedException error: ("+e+")");
 						e.printStackTrace();
 					} catch (ExecutionException e) {
+						System.out.println("Create KibishiiWorker ExecutionException error: ("+e+")");
 						e.printStackTrace();
 					}
 				}
@@ -92,8 +94,18 @@ public class KibishiiWorker {
 		if (nodeID.contains(",") || nodeID.contains("/"))
 			throw new IllegalArgumentException("nodeID may not contain commas or slashes");
 		this.root = root;
+
 		client = Client.builder().endpoints(Util.toURIs(Arrays.asList(endpoints))).build();
+		try
+		{
+			
+		} catch (Exception e)
+		{
+			System.out.println("Create ETCD client error:"+e);
+		}
 		leaseID = client.getLeaseClient().grant(leaseSecs).get().getID();
+
+		
 
 		client.getLeaseClient().keepAlive(leaseID, new StreamObserver<LeaseKeepAliveResponse>() {
 

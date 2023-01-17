@@ -5,4 +5,4 @@ metadata:
 spec:
   containers:
   - name: jump-pad
-    image: gcr.io/velero-gcp/jump-pad:master-c8accaa-17.Jan.2023.08.21.42
+    image: gcr.io/velero-gcp/jump-pad:master-1afcea1-17.Jan.2023.09.33.16

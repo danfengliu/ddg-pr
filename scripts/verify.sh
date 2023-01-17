@@ -52,8 +52,14 @@ do
     i=$((i+1))
     echo "Next round of getting kibishii node:$i"
 done
+
 echo "------RUNNING_NODES------"
 echo $RUNNING_NODES
+if [ $RUNNING_NODES -lt $NODES ]
+then
+    exit $((100+1))
+fi
+
 echo "GET-lease 2 ......."
 etcdctl lease  list --endpoints=http://etcd-client:2379
 
