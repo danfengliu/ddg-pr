@@ -23,8 +23,16 @@ do
         RUNNING_NODES=0
     fi
     i=$((i+1))
+    echo "Next round of get nodes:$i"
 done
 echo "{\"opID\":\"$OPID\",\"cmd\":\"generate\",\"levels\":\"$LEVELS\",\"dirsPerLevel\":\"$DIRSPERLEVEL\",\"filesPerLevel\":\"$FILESPERLEVEL\",\"fileLength\":\"$FILELENGTH\",\"blockSize\":\"$BLOCKSIZE\",\"passNum\":\"$PASSNUM\"}" | etcdctl put /kibishii/control --endpoints=http://etcd-client:2379
+
+echo "------RUNNING_NODES---OPID:$OPID---"
+echo $RUNNING_NODES
+if [ $RUNNING_NODES -lt $NODES ]
+then
+    exit $((100+1))
+fi
 
 STATUS="running"
 NODES_COMPLETED=0
@@ -41,7 +49,9 @@ do
         STATUS="running"
     fi
     i=$((i+1))
+    echo "Next round of get ops status: $i"
 done
+echo "ops STATUS:$STATUS"
 
 ret=1
 i=0
@@ -56,14 +66,16 @@ do
         NODES_COMPLETED=0
     fi
     i=$((i+1))
-    echo $i
+    echo "Next round of get ops nodesCompleted: $i"
 done
+echo "ops NODES_COMPLETED:$NODES_COMPLETED"
 
 if [ "$NODES_COMPLETED" -ne "$NODES" ] 
 then
 	STATUS="failed"
 fi
-echo $STATUS
+
+echo "NODES_COMPLETED STATUS:$STATUS"
 if [ "$STATUS" = 'success' ]
 then
 	exit 0
