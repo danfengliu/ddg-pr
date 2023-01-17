@@ -319,24 +319,30 @@ public class KibishiiWorker {
 			String failedNodesStr = (String)completionValue.get("nodesFailed");
 			nodesCompleted ++;
 			completionValue.put("nodesCompleted", Integer.toString(nodesCompleted));
+			System.out.println("Put: nodesCompleted:"+Integer.toString(nodesCompleted));
+
 
 			if (success) {
 				if (successNodesStr.length() > 0)
 					successNodesStr += ",";
 				successNodesStr += nodeID;
 				completionValue.put("nodesSuccessful", successNodesStr);
+				System.out.println("Put: nodesCompleted:"+successNodesStr);
 
 			} else {
 				if (failedNodesStr.length() > 0)
 					failedNodesStr += ",";
 				failedNodesStr += nodeID;
 				completionValue.put("nodesFailed", failedNodesStr);
+				System.out.println("Put: nodesFailed:" +failedNodesStr);
 			}
 			if (nodesCompleted == nodesStarting) {
 				if (failedNodesStr.length() > 0) {
 					completionValue.put("status", "failed");
+					System.out.println("Put status: failed");
 				} else {
 					completionValue.put("status", "success");
+					System.out.println("Put status: success");
 				}
 			}
 			Txn updateTxn = client.getKVClient().txn();
