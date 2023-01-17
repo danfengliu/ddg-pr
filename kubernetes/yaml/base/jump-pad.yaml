@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jump-pad
+spec:
+  containers:
+  - name: jump-pad
+    image: gcr.io/velero-gcp/jump-pad:main-b33644a-22.Feb.2022.13.16.28

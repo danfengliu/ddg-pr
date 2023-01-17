@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jump-pad
+spec:
+  containers:
+  - name: jump-pad
+    image: dpcpinternal/jump-pad:main-d16defe-01.Sep.2021.23.47.21
