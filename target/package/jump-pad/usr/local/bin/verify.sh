@@ -30,7 +30,7 @@ function get_leases(){
 
 ret=1
 i=0
-while  [ $i -lt 60 ] &&  { [ $RUNNING_NODES -lt $NODES ] || [  "$ret" -ne "0" ]; }
+while  [ $i -lt 60 ] && [ $RUNNING_NODES -lt $NODES ]
 do
     echo "GET-lease 1 ......."
     etcdctl lease  list --endpoints=http://etcd-client:2379
@@ -67,7 +67,7 @@ echo "{\"opID\":\"$OPID\",\"cmd\":\"verify\",\"levels\":\"$LEVELS\",\"dirsPerLev
 STATUS="running"
 ret=1
 i=0
-while  [ $i -lt 60 ] &&  { [ "$STATUS" = 'running' ] || [  "$ret" -ne "0" ]; }
+while  [ $i -lt 60 ] && [ "$STATUS" = 'running' ]
 do
     echo "GET-2"
 	sleep 10

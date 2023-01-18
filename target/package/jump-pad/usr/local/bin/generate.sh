@@ -34,28 +34,10 @@ then
     exit $((100+1))
 fi
 
-STATUS="running"
-NODES_COMPLETED=0
-ret=1
-i=0
-while  [ $i -lt 60 ] &&  { [ "$STATUS" = 'running' ] || [  "$ret" -ne "0" ]; }
-do
-    echo "GET-2"
-	sleep 10
-	STATUS=`etcdctl get /kibishii/ops/$OPID --endpoints=http://etcd-client:2379 --print-value-only | jq ".status" | sed -e 's/"//g'`
-	ret=$?
-    if [ "$ret" -ne "0" ]
-    then
-        STATUS="running"
-    fi
-    i=$((i+1))
-    echo "Next round of get ops status: $i"
-done
-echo "ops STATUS:$STATUS"
 
 ret=1
 i=0
-while  [ $i -lt 60 ] && [  "$ret" -ne "0" ]
+while  [ $i -lt 60 ] && { test -z "$NODES_COMPLETED" || [ $NODES_COMPLETED -lt $NODES ]; }
 do
     echo "GET-3"
     sleep 10
@@ -72,10 +54,29 @@ echo "ops NODES_COMPLETED:$NODES_COMPLETED"
 
 if [ "$NODES_COMPLETED" -ne "$NODES" ] 
 then
-	STATUS="failed"
+    echo "Failed wait for node to complete the work:$NODES_COMPLETED"
+    exit 2
 fi
 
-echo "NODES_COMPLETED STATUS:$STATUS"
+STATUS="running"
+ret=1
+i=0
+while  [ $i -lt 60 ] &&  { test -z "$STATUS" || [ "$STATUS" = 'running' ]; }
+do
+    echo "GET-2"
+	sleep 10
+	STATUS=`etcdctl get /kibishii/ops/$OPID --endpoints=http://etcd-client:2379 --print-value-only | jq ".status" | sed -e 's/"//g'`
+	ret=$?
+    if [ "$ret" -ne "0" ]
+    then
+        STATUS="running"
+    fi
+    i=$((i+1))
+    echo "Next round of get ops status: $i"
+done
+
+echo "STATUS:$STATUS"
+
 if [ "$STATUS" = 'success' ]
 then
 	exit 0

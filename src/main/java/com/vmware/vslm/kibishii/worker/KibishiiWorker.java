@@ -327,7 +327,7 @@ public class KibishiiWorker {
 					successNodesStr += ",";
 				successNodesStr += nodeID;
 				completionValue.put("nodesSuccessful", successNodesStr);
-				System.out.println("Put: nodesCompleted:"+successNodesStr);
+				System.out.println("Put: nodesSuccessful:"+successNodesStr);
 
 			} else {
 				if (failedNodesStr.length() > 0)
