@@ -281,11 +281,13 @@ public class KibishiiWorker {
 		Txn checkTxn = client.getKVClient().txn();
 		ByteSequence key = toBS(completionNodeKey);
 		JSONObject completionJSON = new JSONObject();
-		completionJSON.put("nodesStarting", Integer.toString(nodes));
+		completionJSON.put("nodesStarting", Integer.toString(2));
 		completionJSON.put("nodesCompleted", "0");
 		completionJSON.put("nodesSuccessful", "");
 		completionJSON.put("nodesFailed", "");
 		completionJSON.put("status", "running");
+
+		System.out.println("[createExecutionNode] nodesStarting: " + Integer.toString(2));
 
 		ByteSequence value = toBS(completionJSON.toJSONString());
 
@@ -294,8 +296,13 @@ public class KibishiiWorker {
 				.If(new Cmp(key, Cmp.Op.EQUAL, CmpTarget.createRevision(0)))
 				.Then(io.etcd.jetcd.op.Op.put(key, value, PutOption.newBuilder().build()))
 				.commit();
-		resFuture.get();	// We actually don't care if it succeeds, if it fails it means someone else
-							// succeeded
+		TxnResponse res = resFuture.get();	
+		// We actually don't care if it succeeds, if it fails it means someone else
+		if (res.getPutResponses().size() > 0) {
+			System.out.println("[createExecutionNode] Succeded, created completion");
+		} else {
+			System.out.println("[createExecutionNode] Collided");
+		}
 		return;
 	}
 
@@ -314,7 +321,8 @@ public class KibishiiWorker {
 			JSONObject completionValue = (JSONObject)parser.parse(completionNodeKV.getValue().toString(StandardCharsets.UTF_8));
 			int nodesStarting = Integer.parseInt((String)completionValue.get("nodesStarting"));
 			int nodesCompleted = Integer.parseInt((String)completionValue.get("nodesCompleted"));
-
+            System.out.println("Get: nodesStarting: "+nodesStarting);
+			System.out.println("Get: nodesCompleted: "+nodesCompleted);
 			String successNodesStr = (String)completionValue.get("nodesSuccessful");
 			String failedNodesStr = (String)completionValue.get("nodesFailed");
 			nodesCompleted ++;
@@ -336,6 +344,7 @@ public class KibishiiWorker {
 				completionValue.put("nodesFailed", failedNodesStr);
 				System.out.println("Put: nodesFailed:" +failedNodesStr);
 			}
+			System.out.println("-------nodesCompleted:" +nodesCompleted+" nodesStarting:" + nodesStarting);
 			if (nodesCompleted == nodesStarting) {
 				if (failedNodesStr.length() > 0) {
 					completionValue.put("status", "failed");

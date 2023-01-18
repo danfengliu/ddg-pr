@@ -12,7 +12,7 @@ RUNNING_NODES=0
 
 ret=1
 i=0
-while  [ $i -lt 60 ] &&  { [ $RUNNING_NODES -lt $NODES ] || [  "$ret" -ne "0" ]; }
+while  [ $i -lt 60 ] && [ $RUNNING_NODES -lt $NODES ] 
 do
     echo "GET-1"
 	sleep 10

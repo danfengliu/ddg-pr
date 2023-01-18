@@ -67,7 +67,7 @@ echo "{\"opID\":\"$OPID\",\"cmd\":\"verify\",\"levels\":\"$LEVELS\",\"dirsPerLev
 STATUS="running"
 ret=1
 i=0
-while  [ $i -lt 60 ] && [ "$STATUS" = 'running' ]
+while  [ $i -lt 60 ] && { test -z "$STATUS" || [ "$STATUS" = 'running' ]; }
 do
     echo "GET-2"
 	sleep 10
