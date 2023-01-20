@@ -67,25 +67,28 @@ echo "{\"opID\":\"$OPID\",\"cmd\":\"verify\",\"levels\":\"$LEVELS\",\"dirsPerLev
 STATUS="running"
 ret=1
 i=0
-while  [ $i -lt 60 ] && { test -z "$STATUS" || [ "$STATUS" = 'running' ]; }
+while  [ $i -lt 60 ] && { test -z "$STATUS" || [ "$STATUS" -ne "success" ]; }
 do
     echo "GET-2"
 	sleep 10
 	STATUS=`etcdctl get /kibishii/ops/$OPID --endpoints=http://etcd-client:2379 --print-value-only | jq ".status" | sed -e 's/"//g'`
 	ret=$?
-    if [ $ret -ne 0 ]
+    if [ $ret -eq 0 ] && [ "$STATUS" == "success" ]
     then
-        STATUS="running"
+        echo "break STATUS"
+        get_leases
+        break
     fi
     i=$((i+1))
-    echo $i
+    echo "Next round of get ops status: $i"
 done
 echo "------STATUS------"
 echo $STATUS
 
+NODES_COMPLETED=0
 ret=1
 i=0
-while  [ $i -lt 60 ] && [  "$ret" -ne "0" ]
+while  [ $i -lt 60 ] && { test -z "$NODES_COMPLETED" || [ "$NODES_COMPLETED" -ne "$NODES" ]; }  
 do
     echo "GET-3"
     sleep 10
@@ -93,15 +96,15 @@ do
 	ret=$?
     NODES_FAILED=`etcdctl get /kibishii/ops/$OPID --endpoints=http://etcd-client:2379 --print-value-only | jq ".nodesFailed" | sed -e 's/"//g'`
     echo "NODES_FAILED:$NODES_FAILED"
-    if [ $ret -eq 0 ] && [ "$NODES_COMPLETED" != "$NODES" ] 
+    if [ $ret -eq 0 ] && [ "$NODES_COMPLETED" == "$NODES" ] 
     then
-        echo "break"
+        echo "break NODES_COMPLETED"
         echo "NODES_COMPLETED:$NODES_COMPLETED"
         get_leases
         break
     fi
     i=$((i+1))
-    echo $i
+    echo "Next round of get nodesCompleted: $i"
 done
 
 if [ "$NODES_COMPLETED" != "$NODES" ] 
