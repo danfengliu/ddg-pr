@@ -186,6 +186,7 @@ public class KibishiiWorker {
 					jsonValue = getResponse.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8);
 				} catch (Exception e) {
 					retryTime--;
+					System.out.println("[controlNodeUpdated] retry:"+ Integer.toString(retryTime));
 					TimeUnit.SECONDS.sleep(3);
 				}
 			}
@@ -318,6 +319,7 @@ public class KibishiiWorker {
 				}
             } catch (Exception e) {
                 retryTime--;
+				System.out.println("[createExecutionNode] retry:"+ Integer.toString(retryTime));
                 TimeUnit.SECONDS.sleep(3);
             }
         }
