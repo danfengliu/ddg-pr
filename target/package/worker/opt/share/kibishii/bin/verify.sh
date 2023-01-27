@@ -65,9 +65,9 @@ etcdctl lease  list --endpoints=http://etcd-client:2379
 
 echo "{\"opID\":\"$OPID\",\"cmd\":\"verify\",\"levels\":\"$LEVELS\",\"dirsPerLevel\":\"$DIRSPERLEVEL\",\"filesPerLevel\":\"$FILESPERLEVEL\",\"fileLength\":\"$FILELENGTH\",\"blockSize\":\"$BLOCKSIZE\",\"passNum\":\"$PASSNUM\"}" | etcdctl put /kibishii/control --endpoints=http://etcd-client:2379
 STATUS="running"
-ret=1
 i=0
-while  [ $i -lt 60 ] && { test -z "$STATUS" || [ "$STATUS" -ne "success" ]; }
+echo ""
+while  [ $i -lt 60 ] && { test -z "$STATUS" || [ "$STATUS" != "success" ]; }
 do
     echo "GET-2"
 	sleep 10
@@ -109,9 +109,9 @@ done
 
 if [ "$NODES_COMPLETED" != "$NODES" ] 
 then
-	STATUS="failed"
+	STATUS="failed_nodes"
 fi
-echo $STATUS
+echo STATUS:$STATUS
 if [ "$STATUS" = 'success' ]
 then
     nodes=`etcdctl get /kibishii/nodes/ --prefix --endpoints=http://etcd-client:2379 | grep ^kibishii-deployment`
