@@ -44,6 +44,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -177,8 +178,17 @@ public class KibishiiWorker {
 
 	private void controlNodeUpdated(String nodeID, File root) {
 		try {
-			GetResponse getResponse = client.getKVClient().get(toBS(controlKey)).get();
-			String jsonValue = getResponse.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8);
+			String jsonValue = "";
+			int retryTime=60;
+			while (retryTime>0) {
+				try {
+					GetResponse getResponse = client.getKVClient().get(toBS(controlKey)).get();
+					jsonValue = getResponse.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8);
+				} catch (Exception e) {
+					retryTime--;
+					TimeUnit.SECONDS.sleep(3);
+				}
+			}
 			JSONParser parser = new JSONParser();
 			System.out.println("Parsing " + jsonValue);
 			JSONObject responseObject = (JSONObject) parser.parse(jsonValue);
@@ -273,36 +283,44 @@ public class KibishiiWorker {
 	}
 
 	private void createExecutionNode(int opID) throws InterruptedException, ExecutionException {
-		int nodes;
-		List<KeyValue>nodeList = client.getKVClient().get(toBS(KIBISHII_NODES_PREFIX),
-				GetOption.newBuilder().withPrefix(toBS(KIBISHII_NODES_PREFIX)).build()).get().getKvs();
-		nodes = nodeList.size();
-		String completionNodeKey = KIBISHII_OPS_PREFIX + opID;
-		Txn checkTxn = client.getKVClient().txn();
-		ByteSequence key = toBS(completionNodeKey);
-		JSONObject completionJSON = new JSONObject();
-		completionJSON.put("nodesStarting", Integer.toString(2));
-		completionJSON.put("nodesCompleted", "0");
-		completionJSON.put("nodesSuccessful", "");
-		completionJSON.put("nodesFailed", "");
-		completionJSON.put("status", "running");
+		int retryTime=60;
+        while (retryTime>0) {
+            try {
+				int nodes;
+				List<KeyValue>nodeList = client.getKVClient().get(toBS(KIBISHII_NODES_PREFIX),
+						GetOption.newBuilder().withPrefix(toBS(KIBISHII_NODES_PREFIX)).build()).get().getKvs();
+				nodes = nodeList.size();
+				String completionNodeKey = KIBISHII_OPS_PREFIX + opID;
+				Txn checkTxn = client.getKVClient().txn();
+				ByteSequence key = toBS(completionNodeKey);
+				JSONObject completionJSON = new JSONObject();
+				completionJSON.put("nodesStarting", Integer.toString(2));
+				completionJSON.put("nodesCompleted", "0");
+				completionJSON.put("nodesSuccessful", "");
+				completionJSON.put("nodesFailed", "");
+				completionJSON.put("status", "running");
 
-		System.out.println("[createExecutionNode] nodesStarting: " + Integer.toString(2));
+				System.out.println("[createExecutionNode] nodesStarting: " + Integer.toString(2));
 
-		ByteSequence value = toBS(completionJSON.toJSONString());
+				ByteSequence value = toBS(completionJSON.toJSONString());
 
-		// Only insert if we're the first one to insert something
-		CompletableFuture<TxnResponse> resFuture = checkTxn
-				.If(new Cmp(key, Cmp.Op.EQUAL, CmpTarget.createRevision(0)))
-				.Then(io.etcd.jetcd.op.Op.put(key, value, PutOption.newBuilder().build()))
-				.commit();
-		TxnResponse res = resFuture.get();	
-		// We actually don't care if it succeeds, if it fails it means someone else
-		if (res.getPutResponses().size() > 0) {
-			System.out.println("[createExecutionNode] Succeded, created completion");
-		} else {
-			System.out.println("[createExecutionNode] Collided");
-		}
+				// Only insert if we're the first one to insert something
+				CompletableFuture<TxnResponse> resFuture = checkTxn
+						.If(new Cmp(key, Cmp.Op.EQUAL, CmpTarget.createRevision(0)))
+						.Then(io.etcd.jetcd.op.Op.put(key, value, PutOption.newBuilder().build()))
+						.commit();
+				TxnResponse res = resFuture.get();
+				// We actually don't care if it succeeds, if it fails it means someone else
+				if (res.getPutResponses().size() > 0) {
+					System.out.println("[createExecutionNode] Succeded, created completion");
+				} else {
+					System.out.println("[createExecutionNode] Collided");
+				}
+            } catch (Exception e) {
+                retryTime--;
+                TimeUnit.SECONDS.sleep(3);
+            }
+        }
 		return;
 	}
 
