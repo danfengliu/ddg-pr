@@ -322,6 +322,7 @@ public class KibishiiWorker {
 				} else {
 					System.out.println("[createExecutionNode] Collided");
 				}
+				break;
             } catch (Exception e) {
                 retryTime--;
 				System.out.println("[createExecutionNode] retry:"+ Integer.toString(retryTime));
