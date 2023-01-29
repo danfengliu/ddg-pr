@@ -157,6 +157,7 @@ public class KibishiiWorker {
 				System.out.println("watch: On next called, response = " + response);
 				for (WatchEvent curEvent:response.getEvents()) {
 					if (curEvent.getEventType() == EventType.PUT) {
+						System.out.println("controlNodeUpdated= " + nodeID);
 						controlNodeUpdated(nodeID, root);
 					}
 				}
@@ -178,18 +179,22 @@ public class KibishiiWorker {
 
 	private void controlNodeUpdated(String nodeID, File root) {
 		try {
+			System.out.println("start [controlNodeUpdated] :");
 			String jsonValue = "";
 			int retryTime=60;
 			while (retryTime>0) {
 				try {
+					System.out.println("start [controlNodeUpdated] :1");
 					GetResponse getResponse = client.getKVClient().get(toBS(controlKey)).get();
 					jsonValue = getResponse.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8);
+				    break;
 				} catch (Exception e) {
 					retryTime--;
 					System.out.println("[controlNodeUpdated] retry:"+ Integer.toString(retryTime));
 					TimeUnit.SECONDS.sleep(3);
 				}
 			}
+			System.out.println("start [controlNodeUpdated] :2");
 			JSONParser parser = new JSONParser();
 			System.out.println("Parsing " + jsonValue);
 			JSONObject responseObject = (JSONObject) parser.parse(jsonValue);
