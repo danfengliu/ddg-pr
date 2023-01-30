@@ -83,7 +83,7 @@ public class KibishiiWorker {
 	private final String nodeID;
 	private final Client client;
 	private final long leaseID;
-	private int leaseSecs = 10;
+	private int leaseSecs = 600;
 	private long leaseMS = leaseSecs * 1000;
 	private String nodeKey, controlKey, resultsKey, statusKey;
 	private ExecutionThread executionThread;
